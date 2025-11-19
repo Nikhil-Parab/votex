@@ -14,6 +14,7 @@ import {
   Download,
   RefreshCw,
   Home,
+  Search, // Re-used Search icon
 } from "lucide-react";
 
 const API_URL = "http://localhost:5000/api";
@@ -42,6 +43,8 @@ function App() {
     hasVoted: false,
     votedParty: null,
   });
+  // NEW: Search State for Voter Campaigns
+  const [campaignSearchQuery, setCampaignSearchQuery] = useState("");
 
   // Party States
   const [partyProfile, setPartyProfile] = useState(null);
@@ -65,6 +68,8 @@ function App() {
   const [users, setUsers] = useState([]);
   const [adminParties, setAdminParties] = useState([]);
   const [logs, setLogs] = useState([]);
+  // Search State for Admin Users (from previous request)
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Check session on mount
   useEffect(() => {
@@ -200,6 +205,20 @@ function App() {
       showMessage("Vote failed: " + err.message, true);
     }
   };
+
+  // NEW: Filtered Campaigns Logic
+  const filteredCampaigns = campaigns.filter(
+    (campaign) =>
+      campaign.title
+        .toLowerCase()
+        .includes(campaignSearchQuery.toLowerCase()) ||
+      campaign.description
+        .toLowerCase()
+        .includes(campaignSearchQuery.toLowerCase()) ||
+      campaign.party_name
+        .toLowerCase()
+        .includes(campaignSearchQuery.toLowerCase())
+  );
 
   // ============ PARTY FUNCTIONS ============
   const loadPartyData = async () => {
@@ -421,6 +440,14 @@ function App() {
   const handleExport = (type) => {
     window.open(`${API_URL}/admin/export/${type}`, "_blank");
   };
+
+  // Filtered Users logic (kept from previous request for completeness)
+  const filteredUsers = users.filter(
+    (u) =>
+      u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      u.role.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   // Load data when tab changes
   useEffect(() => {
@@ -762,8 +789,23 @@ function App() {
               {activeTab === "campaigns" && (
                 <div>
                   <h2 style={styles.pageTitle}>Campaign Highlights</h2>
+
+                  {/* NEW: Campaign Search Bar */}
+                  <div style={styles.searchBar}>
+                    <Search size={20} color="#6b7280" />
+                    <input
+                      type="text"
+                      placeholder="Search campaigns by title, description, or party..."
+                      value={campaignSearchQuery}
+                      onChange={(e) => setCampaignSearchQuery(e.target.value)}
+                      style={styles.searchBarInput}
+                    />
+                  </div>
+                  {/* END NEW: Campaign Search Bar */}
+
                   <div style={styles.campaignsGrid}>
-                    {campaigns.map((campaign) => (
+                    {/* Use filteredCampaigns instead of campaigns */}
+                    {filteredCampaigns.map((campaign) => (
                       <div key={campaign.id} style={styles.campaignCard}>
                         <div style={styles.campaignImageContainer}>
                           {campaign.image_url &&
@@ -791,6 +833,18 @@ function App() {
                         <p>{campaign.description}</p>
                       </div>
                     ))}
+                    {filteredCampaigns.length === 0 && (
+                      <p
+                        style={{
+                          textAlign: "center",
+                          gridColumn: "1 / -1",
+                          padding: "20px",
+                          color: "#9ca3af",
+                        }}
+                      >
+                        No campaigns found matching your search.
+                      </p>
+                    )}
                   </div>
                 </div>
               )}
@@ -1069,6 +1123,18 @@ function App() {
               {activeTab === "admin-users" && (
                 <div>
                   <h2 style={styles.pageTitle}>Manage Users</h2>
+                  {/* Search Bar for Admin Users (from previous request) */}
+                  <div style={styles.searchBar}>
+                    <Search size={20} color="#6b7280" />
+                    <input
+                      type="text"
+                      placeholder="Search users by name, email, or role..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      style={styles.searchBarInput}
+                    />
+                  </div>
+                  {/* End Search Bar */}
                   <div style={styles.tableContainer}>
                     <table style={styles.table}>
                       <thead>
@@ -1082,7 +1148,8 @@ function App() {
                         </tr>
                       </thead>
                       <tbody>
-                        {users.map((u) => (
+                        {/* Use filteredUsers instead of users */}
+                        {filteredUsers.map((u) => (
                           <tr key={u.id} style={styles.tr}>
                             <td style={styles.td}>{u.id}</td>
                             <td style={styles.td}>{u.name}</td>
@@ -1109,6 +1176,17 @@ function App() {
                         ))}
                       </tbody>
                     </table>
+                    {filteredUsers.length === 0 && (
+                      <p
+                        style={{
+                          textAlign: "center",
+                          padding: "20px",
+                          color: "#9ca3af",
+                        }}
+                      >
+                        No users found matching your search.
+                      </p>
+                    )}
                   </div>
                 </div>
               )}
@@ -1480,6 +1558,7 @@ const styles = {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
     gap: "20px",
+    marginTop: "20px", // Added space below search bar
   },
   campaignCard: {
     padding: "20px",
@@ -1641,6 +1720,7 @@ const styles = {
     overflowX: "auto",
     borderRadius: "12px",
     border: "1px solid #e5e7eb",
+    marginTop: "20px",
   },
   table: {
     width: "100%",
@@ -1765,6 +1845,23 @@ const styles = {
     borderRadius: "6px",
     cursor: "pointer",
     fontWeight: "500",
+  },
+  searchBar: {
+    display: "flex",
+    alignItems: "center",
+    padding: "10px 15px",
+    border: "1px solid #d1d5db",
+    borderRadius: "8px",
+    marginBottom: "20px",
+    backgroundColor: "#f9fafb",
+  },
+  searchBarInput: {
+    flex: 1,
+    border: "none",
+    padding: "0 10px",
+    outline: "none",
+    backgroundColor: "transparent",
+    fontSize: "14px",
   },
 };
 
