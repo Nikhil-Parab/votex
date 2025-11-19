@@ -556,7 +556,6 @@ function App() {
                   </button>
                   <div style={styles.testAccounts}>
                     <p style={styles.testTitle}>Test Accounts:</p>
-                    <p>Admin: admin@voting.com / admin123</p>
                     <p>Voter: voter@test.com / voter123</p>
                     <p>Party: party@test.com / party123</p>
                   </div>
