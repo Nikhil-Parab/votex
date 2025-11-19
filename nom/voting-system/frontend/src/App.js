@@ -302,6 +302,38 @@ function App() {
     }
   };
 
+  const handlePartyLogoChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      showMessage("Image size should be less than 2MB", true);
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const res = await fetch(`${API_URL}/party/logo/upload`, {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        showMessage("Party logo updated successfully!");
+        loadPartyData(); // Reload to show new logo
+      } else {
+        showMessage(data.error, true);
+      }
+    } catch (err) {
+      showMessage("Logo upload failed: " + err.message, true);
+    }
+  };
+
   // ============ ADMIN FUNCTIONS ============
   const loadAdminData = async () => {
     try {
@@ -691,7 +723,21 @@ function App() {
                               : {}),
                           }}
                         >
-                          <div style={styles.partyLogo}>{party.logo_url}</div>
+                          <div style={styles.partyLogo}>
+                            {party.logo_url &&
+                            (party.logo_url.startsWith("http") ||
+                              party.logo_url.includes("/")) ? (
+                              <img
+                                src={party.logo_url}
+                                alt={party.name}
+                                style={styles.partyLogoImg}
+                              />
+                            ) : (
+                              <span style={styles.partyLogoEmoji}>
+                                {party.logo_url || "🎯"}
+                              </span>
+                            )}
+                          </div>
                           <h3>{party.name}</h3>
                           <p>{party.description}</p>
                           <div style={styles.voteCount}>
@@ -781,7 +827,7 @@ function App() {
                         />
                         <input
                           type="text"
-                          placeholder="Logo (emoji)"
+                          placeholder="Logo (emoji or leave for default)"
                           value={newParty.logo_url}
                           onChange={(e) =>
                             setNewParty({
@@ -798,11 +844,40 @@ function App() {
                     </div>
                   ) : (
                     <div>
-                      <div style={styles.statsGrid}>
-                        <div style={styles.statCard}>
+                      <div style={styles.partyProfileCard}>
+                        <div style={styles.partyLogoSection}>
+                          <div style={styles.partyLogoDisplay}>
+                            {partyProfile.logo_url &&
+                            (partyProfile.logo_url.startsWith("http") ||
+                              partyProfile.logo_url.includes("/")) ? (
+                              <img
+                                src={partyProfile.logo_url}
+                                alt="Party Logo"
+                                style={styles.partyLogoDisplayImg}
+                              />
+                            ) : (
+                              <div style={styles.partyLogoEmojiLarge}>
+                                {partyProfile.logo_url || "🎯"}
+                              </div>
+                            )}
+                          </div>
+                          <label style={styles.uploadLogoButton}>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={handlePartyLogoChange}
+                              style={{ display: "none" }}
+                            />
+                            📷 Change Logo
+                          </label>
+                        </div>
+                        <div style={styles.partyInfoSection}>
                           <h3>{partyProfile.name}</h3>
                           <p>{partyProfile.description}</p>
                         </div>
+                      </div>
+
+                      <div style={styles.statsGrid}>
                         <div style={styles.statCard}>
                           <h4>Total Votes</h4>
                           <p style={styles.statNumber}>{voteCount}</p>
@@ -1365,6 +1440,19 @@ const styles = {
   partyLogo: {
     fontSize: "48px",
     marginBottom: "15px",
+    height: "80px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  partyLogoImg: {
+    width: "80px",
+    height: "80px",
+    objectFit: "cover",
+    borderRadius: "8px",
+  },
+  partyLogoEmoji: {
+    fontSize: "64px",
   },
   voteCount: {
     marginTop: "15px",
@@ -1428,15 +1516,6 @@ const styles = {
     fontSize: "48px",
     color: "#9ca3af",
   },
-  campaignImage: {
-    fontSize: "64px",
-    textAlign: "center",
-    marginBottom: "15px",
-    minHeight: "64px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  },
   partyTag: {
     display: "inline-block",
     padding: "4px 12px",
@@ -1450,6 +1529,57 @@ const styles = {
   createPartySection: {
     maxWidth: "600px",
     margin: "0 auto",
+  },
+  partyProfileCard: {
+    display: "flex",
+    gap: "30px",
+    padding: "30px",
+    backgroundColor: "#f9fafb",
+    borderRadius: "12px",
+    marginBottom: "30px",
+    border: "1px solid #e5e7eb",
+  },
+  partyLogoSection: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: "15px",
+  },
+  partyLogoDisplay: {
+    width: "150px",
+    height: "150px",
+    borderRadius: "12px",
+    overflow: "hidden",
+    backgroundColor: "#e5e7eb",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    border: "3px solid #d1d5db",
+  },
+  partyLogoDisplayImg: {
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+  },
+  partyLogoEmojiLarge: {
+    fontSize: "64px",
+  },
+  uploadLogoButton: {
+    padding: "10px 20px",
+    backgroundColor: "#6366f1",
+    color: "white",
+    borderRadius: "8px",
+    cursor: "pointer",
+    fontSize: "14px",
+    fontWeight: "500",
+    textAlign: "center",
+    transition: "background-color 0.2s",
+  },
+  partyInfoSection: {
+    flex: 1,
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
   },
   statsGrid: {
     display: "grid",

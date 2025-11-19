@@ -24,3 +24,9 @@ class Config:
     
     # Application Configuration
     JSON_SORT_KEYS = False
+    
+    # File Upload Configuration
+    UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
+    CAMPAIGN_UPLOAD_FOLDER = os.path.join(UPLOAD_FOLDER, 'campaigns')
+    MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5MB max file size
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}

@@ -19,6 +19,12 @@ def get_parties():
             ORDER BY p.name
         """)
         parties = cur.fetchall()
+        
+        # Convert local file paths to full URLs for logos
+        for party in parties:
+            if party['logo_url'] and not party['logo_url'].startswith('http') and '/' in party['logo_url']:
+                party['logo_url'] = f"http://localhost:5000/uploads/{party['logo_url']}"
+        
         cur.close()
         
         return jsonify({'parties': parties}), 200
@@ -38,6 +44,12 @@ def get_campaigns():
             ORDER BY c.created_at DESC
         """)
         campaigns = cur.fetchall()
+        
+        # Convert local file paths to full URLs
+        for campaign in campaigns:
+            if campaign['image_url'] and not campaign['image_url'].startswith('http'):
+                campaign['image_url'] = f"http://localhost:5000/uploads/{campaign['image_url']}"
+        
         cur.close()
         
         return jsonify({'campaigns': campaigns}), 200
